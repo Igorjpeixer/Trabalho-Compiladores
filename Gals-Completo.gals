@@ -1,0 +1,239 @@
+#Options
+GenerateScanner = true
+GenerateParser = true
+Language = C++
+ScannerName = Lexico
+ParserName = Sintatico
+SemanticName = Semantico
+ScannerCaseSensitive = true
+ScannerTable = Full
+Input = String
+Parser = SLR
+#RegularDefinitions
+D : [0-9]
+L : [a-zA-Z]
+#Tokens
+// Descartar brancos e comentarios
+: [\n\r\t\s]+
+: [/][/][^\n]*
+: [/]\*([^\*]|\*[^/])*\*[/]
+
+// Literais
+LITERAL_INT   : {D}+
+LITERAL_BIN   : 0b[01]+
+LITERAL_HEX   : 0x[0-9a-fA-F]+
+LITERAL_FLOAT : {D}+\.{D}+
+LITERAL_CHAR  : '[^']'
+LITERAL_STR   : \"[^\"]*\"
+
+// Palavras Reservadas
+SE : "se"
+SENAO : "senao"
+ENQUANTO : "enquanto"
+PARA : "para"
+PARA_CADA : "para_cada"
+RETORNE : "retorne"
+INTEIRO : "int"
+REAL : "float"
+BOOLEANO : "bool"
+CARACTER : "char"
+STRING : "string"
+VAZIO : "void"
+VERDADE : "verdade"
+FALSO : "falso"
+PRINCIPAL : "principal"
+ESCREVA : "escreva"
+LEIA : "leia"
+FIM : "fim"
+FACA : "faca"
+
+// Identificador geral
+ID : ({L}|_)({L}|{D}|_)*
+
+// Operadores Aritmeticos
+"="
+"+"
+"-"
+"*"
+"/"
+"%"
+// Operadores Relacionais
+">="
+"<="
+"=="
+"!="
+">"
+"<"
+// Operadores Logicos
+"&&"
+"||"
+"!"
+// Operadores Bit a Bit
+">>"
+"<<"
+"&"
+"|"
+"~"
+"^"
+// Delimitadores e pontuadores
+"."
+";"
+":"
+","
+"("
+")"
+"["
+"]"
+"{"
+"}"
+#NonTerminals
+<programa>
+<lista_declaracoes>
+<declaracao_global>
+<funcao>
+<tipo>
+<parametros>
+<lista_param>
+<param>
+<lista_comandos>
+<comando>
+<declaracao_var>
+<lista_ids>
+<decl_id>
+<atribuicao>
+<se_senao>
+<senao_opcional>
+<enquanto>
+<para>
+<faca_enquanto>
+<entrada>
+<saida>
+<lista_saida>
+<retorno>
+<chamada_funcao>
+<argumentos>
+<lista_argumentos>
+<exp>
+<exp1>
+<exp2>
+<exp3>
+<exp4>
+<exp5>
+<exp6>
+<exp7>
+<exp8>
+<exp9>
+<exp10>
+#Grammar
+// =================================================================
+// PROGRAMA
+// =================================================================
+<programa> ::= <lista_declaracoes> #19 ;
+
+<lista_declaracoes> ::= <declaracao_global> <lista_declaracoes> | <declaracao_global> ;
+
+<declaracao_global> ::= <funcao> | <declaracao_var> ";" ;
+
+// =================================================================
+// FUNCOES
+// =================================================================
+<funcao> ::= <tipo> ID #7 "(" #6 <parametros> ")" "{" <lista_comandos> "}" #8 ;
+
+<tipo> ::= INTEIRO #1 | REAL #1 | BOOLEANO #1 | CARACTER #1 | VAZIO #1 | STRING #1 ;
+
+<parametros> ::= <lista_param> | î ;
+<lista_param> ::= <param> "," <lista_param> | <param> ;
+<param> ::= <tipo> ID #9 | <tipo> ID #10 "[" "]" ;
+
+// =================================================================
+// COMANDOS
+// =================================================================
+<lista_comandos> ::= <comando> <lista_comandos> | î ;
+
+<comando> ::= <declaracao_var> ";"
+            | <atribuicao> ";"
+            | <se_senao>
+            | <enquanto>
+            | <para>
+            | <faca_enquanto>
+            | <entrada> ";"
+            | <saida> ";"
+            | <retorno> ";"
+            | <chamada_funcao> ";" ;
+
+// =================================================================
+// DECLARACAO DE VARIAVEIS
+// =================================================================
+<declaracao_var> ::= <tipo> <lista_ids> ;
+<lista_ids> ::= <decl_id> "," <lista_ids> | <decl_id> ;
+<decl_id> ::= ID #2
+            | ID #2 "=" <exp> #12
+            | ID #11 "[" <exp> "]" ;
+
+// =================================================================
+// ATRIBUICAO
+// =================================================================
+<atribuicao> ::= ID #4 "=" <exp> #5
+               | ID #4 "[" <exp> "]" "=" <exp> #13 ;
+
+// =================================================================
+// CONTROLES
+// =================================================================
+<se_senao> ::= SE "(" <exp> ")" #36 "{" #15 <lista_comandos> "}" #16 <senao_opcional> #38 ;
+<senao_opcional> ::= SENAO #37 "{" #15 <lista_comandos> "}" #16 | î ;
+
+<enquanto> ::= ENQUANTO #39 "(" <exp> ")" #40 "{" #15 <lista_comandos> "}" #16 #41 ;
+
+<para> ::= PARA "(" #15 #44 <atribuicao> ";" #45 <exp> #46 ";" <atribuicao> #47 ")" "{" <lista_comandos> "}" #48 #16 ;
+
+<faca_enquanto> ::= FACA #42 "{" #15 <lista_comandos> "}" #16 ENQUANTO "(" <exp> ")" #43 ";" ;
+
+// =================================================================
+// E/S e RETORNO
+// =================================================================
+<entrada> ::= LEIA #21 "(" ID #4 ")" #5
+            | LEIA #21 "(" ID #4 "[" <exp> #50 "]" ")" ;
+
+<saida> ::= ESCREVA #22 "(" <lista_saida> ")" #23 ;
+<lista_saida> ::= <exp> #18 "," <lista_saida> | <exp> #18 ;
+
+<retorno> ::= RETORNE <exp> #51 ;
+
+// =================================================================
+// CHAMADA DE FUNCAO
+// =================================================================
+<chamada_funcao> ::= ID #14 "(" <argumentos> ")" #53 ;
+<argumentos> ::= <lista_argumentos> | î ;
+<lista_argumentos> ::= <exp> #52 "," <lista_argumentos> | <exp> #52 ;
+
+// =================================================================
+// EXPRESSOES (com acoes de geracao de codigo por operador)
+// =================================================================
+<exp>   ::= <exp> "||" <exp1> | <exp1> ;
+<exp1>  ::= <exp1> "&&" <exp2> | <exp2> ;
+<exp2>  ::= <exp2> "|" <exp3> #27 | <exp3> ;
+<exp3>  ::= <exp3> "^" <exp4> #28 | <exp4> ;
+<exp4>  ::= <exp4> "&" <exp5> #26 | <exp5> ;
+<exp5>  ::= <exp5> ">"  <exp6> #29
+          | <exp5> "<"  <exp6> #30
+          | <exp5> ">=" <exp6> #31
+          | <exp5> "<=" <exp6> #32
+          | <exp5> "==" <exp6> #33
+          | <exp5> "!=" <exp6> #34
+          | <exp6> ;
+<exp6>  ::= <exp6> "<<" <exp7> | <exp6> ">>" <exp7> | <exp7> ;
+<exp7>  ::= <exp7> "+" <exp8> #24 | <exp7> "-" <exp8> #25 | <exp8> ;
+<exp8>  ::= <exp8> "*" <exp9> | <exp8> "/" <exp9> | <exp8> "%" <exp9> | <exp9> ;
+<exp9>  ::= "-" <exp10> #35 | "~" <exp10> | "!" <exp10> | <exp10> ;
+<exp10> ::= LITERAL_INT #20
+          | LITERAL_BIN #20
+          | LITERAL_HEX #20
+          | LITERAL_FLOAT
+          | LITERAL_CHAR
+          | LITERAL_STR
+          | VERDADE
+          | FALSO
+          | ID #3 "[" <exp> #49 "]"
+          | <chamada_funcao>
+          | ID #3
+          | "(" <exp> ")" ;
